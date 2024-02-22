@@ -1,0 +1,45 @@
+{% extends 'admin/base_site.html' %}
+{% load static %}
+{% block content %}
+  <link rel="stylesheet" href="{% static 'sales/css/style.css' %}" />
+  <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css" />
+  <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet" />
+  <div id="product-dialog" title="Agregar Producto"></div>
+  <form method="post" action="{% url 'create_sale' %}" class="mt-4">
+    {% csrf_token %}
+    <div class="form-group">
+      <label for="id_product_name">Nombre del Producto:</label>
+      <input type="text" class="form-control" id="id_product_name" placeholder="Nombre del Producto" autocomplete="off" />
+      <div id="product-list-container" class="product-list-container position-absolute"></div>
+    </div>
+    <div class="form-group">
+      <label for="customer_name">Nombre del Cliente:</label>
+      <input type="text" class="form-control" id="customer_name" name="customer_name" placeholder="Ingrese el nombre del cliente" required />
+    </div>
+    <div class="form-group">
+      <label for="sales-table">Productos:</label>
+      <table id="sales-table" class="table table-striped table-bordered">
+        <thead>
+          <tr>
+            <th>Nombre del Producto</th>
+            <th>Cantidad</th>
+            <th>Precio</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Las filas de la tabla se agregarán dinámicamente con JavaScript -->
+        </tbody>
+      </table>
+    </div>
+    <div class="form-group">
+      <label for="totalVenta">Total de la Venta:</label>
+      <input type="text" class="form-control" id="totalVenta" readonly />
+    </div>
+    <button type="submit" class="btn btn-primary mt-3">Registrar Venta</button>
+  </form>
+  <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+  <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+  <script src="{% static 'sales/js/script.js' %}"></script>
+{% endblock %}
