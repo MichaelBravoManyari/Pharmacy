@@ -1,43 +1,49 @@
-from django.shortcuts import render, redirect
-from django.forms import inlineformset_factory
-from .forms import SaleForm, SaleDetailForm
-from django.db import transaction
-from .models import Sale, SaleDetail
-from inventory.models import Product
+import json
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
+from .models import Sale, DocumentType, SaleDetail, Product
+from django.core.exceptions import ValidationError
 
 def create_sale(request):
-    SaleDetailFormSet = inlineformset_factory(Sale, SaleDetail, form=SaleDetailForm, extra=1, can_delete=True)
+    datos_venta = json.loads(request.POST.get('sale_data'))
+    datos_detalles_venta = json.loads(request.POST.get('sale_details')) 
 
-    if request.method == 'POST':
-        sale_form = SaleForm(request.POST)
-        sale_detail_formset = SaleDetailFormSet(request.POST, prefix='sale_detail')
+    serie_siguiente, numero_siguiente = Sale.get_next_serie_and_numero()
 
-        if sale_form.is_valid() and sale_detail_formset.is_valid():
-            with transaction.atomic():
-                sale = sale_form.save()
+    tipo_documento_valor = datos_venta['document_type']
+    tipo_documento = get_object_or_404(DocumentType, pk=tipo_documento_valor)
 
-                for form in sale_detail_formset:
-                    sale_detail = form.save(commit=False)
-                    sale_detail.sale = sale
-                    sale_detail.total = sale_detail.quantity * sale_detail.unit_sale_price
+    try:
+        venta = Sale.objects.create(
+            client=datos_venta['client'],
+            serie=serie_siguiente,
+            numero=numero_siguiente,
+            document_type=tipo_documento,
+        )
 
-                    # Si se proporciona un nombre de producto, busca el producto y asigna la instancia al detalle de venta
-                    product_name = form.cleaned_data.get('product_name')
-                    if product_name:
-                        product = Product.objects.filter(name__iexact=product_name).first()
-                        if product:
-                            sale_detail.product = product
+        detalles_venta = []
+        for detalle in datos_detalles_venta:
+            producto = get_object_or_404(Product, pk=detalle['productId']) 
 
-                    sale_detail.save()
+            if producto.quantity < int(detalle['quantity']):
+                    raise ValidationError(f"No hay suficiente stock para {producto.name}")
 
-                    # Actualizar el stock del producto
-                    if sale_detail.product:
-                        sale_detail.product.quantity -= sale_detail.quantity
-                        sale_detail.product.save()
+            detalle_venta = SaleDetail(
+                sale=venta,
+                product=producto,
+                quantity=detalle['quantity'],
+                unit_sale_price=detalle['price'],  # Use el nombre de campo correcto
+                total=detalle['total'],
+            )
 
-            return redirect('ventas')  # Ajusta la redirección según tus necesidades
-    else:
-        sale_form = SaleForm()
-        sale_detail_formset = SaleDetailFormSet(prefix='sale_detail')
+            detalles_venta.append(detalle_venta)
 
-    return render(request, 'sales/create_sale.html', {'sale_form': sale_form, 'sale_detail_formset': sale_detail_formset})
+            producto.quantity -= int(detalle['quantity'])
+            producto.save()
+
+        SaleDetail.objects.bulk_create(detalles_venta)
+
+        return JsonResponse({'message': 'Venta registrada exitosamente'})
+    except ValidationError as e:
+        mensaje_error = str(e)
+        return JsonResponse({'error': mensaje_error}, status=400)

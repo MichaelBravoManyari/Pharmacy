@@ -5,8 +5,11 @@
   <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css" />
   <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet" />
   <div id="product-dialog" title="Agregar Producto"></div>
-  <form method="post" action="{% url 'create_sale' %}" class="mt-4">
+  <form method="post" class="mt-4">
     {% csrf_token %}
+    <script>
+      const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value
+    </script>
     <div class="form-group">
       <label for="id_product_name">Nombre del Producto:</label>
       <input type="text" class="form-control" id="id_product_name" placeholder="Nombre del Producto" autocomplete="off" />
@@ -14,7 +17,11 @@
     </div>
     <div class="form-group">
       <label for="customer_name">Nombre del Cliente:</label>
-      <input type="text" class="form-control" id="customer_name" name="customer_name" placeholder="Ingrese el nombre del cliente" required />
+      <input type="text" class="form-control" id="customer_name" name="customer_name" placeholder="Ingrese el nombre del cliente" />
+    </div>
+    <div class="form-group">
+      <label for="document_type">Selecciona el tipo de documento:</label>
+      <select id="document_type" class="form-control" name="tipo-documento"></select>
     </div>
     <div class="form-group">
       <label for="sales-table">Productos:</label>
@@ -36,7 +43,8 @@
       <label for="totalVenta">Total de la Venta:</label>
       <input type="text" class="form-control" id="totalVenta" readonly />
     </div>
-    <button type="submit" class="btn btn-primary mt-3">Registrar Venta</button>
+    <button type="button" class="btn btn-primary mt-3" id="btn-registrar-venta">Registrar Venta</button>
+    <button type="button" class="btn btn-secondary mt-3" id="btn-limpiar">Limpiar</button>
   </form>
   <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
   <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>

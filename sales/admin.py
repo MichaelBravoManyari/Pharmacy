@@ -25,5 +25,5 @@ class SaleDetailInLine(admin.TabularInline):
 
 @admin.register(Sale)
 class SaleAdmin(admin.ModelAdmin):
-    change_form_template = "sales/create_sale.html"
+    add_form_template = "sales/create_sale.html"
     inlines = [SaleDetailInLine]
